@@ -118,8 +118,8 @@ function showError(error) {
 
 async function initialize() {
   try {
-    // Load the CSV relative to this JavaScript file.
-    const dataUrl = new URL("../data/youtube.csv", import.meta.url);
+    // Load the CSV from the project root relative to this JavaScript file.
+    const dataUrl = new URL("../youtube.csv", import.meta.url);
     state.ads = await loadAds(dataUrl);
     buildCompanyOptions();
     render();
