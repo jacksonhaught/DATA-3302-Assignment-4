@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="A scatterplot of observed YouTube views for Super Bowl advertisements."
+    />
+    <title>YouTube Ad Views by Super Bowl Year</title>
+    <link rel="stylesheet" href="./styles.css" />
+    <script type="module" src="./js/app.js"></script>
+  </head>
+  <body>
+    <main class="page">
+      <header class="page-header">
+        <p class="eyebrow">Data visualization</p>
+        <h1>YouTube Ad Views by Super Bowl Year</h1>
+        <p class="intro">
+          Each dot represents one Super Bowl advertisement. Horizontal jitter
+          makes ads from the same year easier to distinguish.
+        </p>
+      </header>
+
+      <section class="chart-card" aria-label="YouTube advertisement scatterplot">
+        <div class="chart-scroll">
+          <div id="chart" aria-busy="true"></div>
+        </div>
+        <p id="chart-status" class="visually-hidden" role="status"></p>
+      </section>
+    </main>
+  </body>
+</html>
