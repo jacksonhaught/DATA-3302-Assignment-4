@@ -21,7 +21,7 @@ body {
 
 .page-header {
   max-width: 760px;
-  margin-bottom: 28px;
+  margin-bottom: 20px;
 }
 
 .eyebrow {
@@ -44,6 +44,116 @@ h1 {
   color: #4b5563;
   font-size: 1rem;
   line-height: 1.6;
+}
+
+.controls {
+  position: relative;
+  z-index: 1;
+  margin-bottom: 18px;
+}
+
+.company-filter {
+  position: relative;
+  width: min(100%, 320px);
+}
+
+.control-label {
+  margin: 0 0 7px;
+  color: #374151;
+  font-size: 0.875rem;
+  font-weight: 700;
+}
+
+.company-filter-button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 10px 12px;
+  color: #111827;
+  font: inherit;
+  text-align: left;
+  background: #ffffff;
+  border: 1px solid #9ca3af;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.company-filter-button:hover:not(:disabled) {
+  border-color: #1d4ed8;
+}
+
+.company-filter-button:focus-visible {
+  outline: 3px solid rgb(37 99 235 / 0.3);
+  outline-offset: 2px;
+}
+
+.company-filter-button:disabled {
+  color: #6b7280;
+  cursor: wait;
+}
+
+.filter-chevron {
+  color: #4b5563;
+  font-size: 1.15rem;
+  line-height: 1;
+  transition: transform 150ms ease;
+}
+
+.company-filter-button[aria-expanded="true"] .filter-chevron {
+  transform: rotate(180deg);
+}
+
+.company-filter-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  z-index: 10;
+  width: 100%;
+  max-height: 320px;
+  padding: 12px;
+  overflow-y: auto;
+  background: #ffffff;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  box-shadow: 0 12px 28px rgb(15 23 42 / 0.14);
+}
+
+.filter-help {
+  margin: 0 0 10px;
+  color: #4b5563;
+  font-size: 0.8rem;
+  line-height: 1.4;
+}
+
+.company-options {
+  display: grid;
+  gap: 2px;
+}
+
+.company-option {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 7px 6px;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.company-option:hover {
+  background: #eff6ff;
+}
+
+.company-option input {
+  width: 1rem;
+  height: 1rem;
+  margin: 0;
+  accent-color: #1d4ed8;
+}
+
+.company-option input:focus-visible {
+  outline: 3px solid rgb(37 99 235 / 0.3);
+  outline-offset: 2px;
 }
 
 .chart-card {

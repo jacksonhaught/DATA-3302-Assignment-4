@@ -22,6 +22,39 @@
         </p>
       </header>
 
+      <section class="controls" aria-label="Visualization controls">
+        <div class="company-filter" id="company-filter">
+          <p class="control-label" id="company-filter-title">
+            Highlight companies
+          </p>
+          <button
+            id="company-filter-button"
+            class="company-filter-button"
+            type="button"
+            aria-controls="company-filter-menu"
+            aria-expanded="false"
+            aria-labelledby="company-filter-title company-filter-label"
+            disabled
+          >
+            <span id="company-filter-label">Select companies</span>
+            <span class="filter-chevron" aria-hidden="true">⌄</span>
+          </button>
+
+          <div id="company-filter-menu" class="company-filter-menu" hidden>
+            <p class="filter-help">
+              Choose one or more companies to highlight their ads. Clear all
+              boxes to show every company.
+            </p>
+            <div
+              id="company-options"
+              class="company-options"
+              role="group"
+              aria-labelledby="company-filter-title"
+            ></div>
+          </div>
+        </div>
+      </section>
+
       <section class="chart-card" aria-label="YouTube advertisement scatterplot">
         <div class="chart-scroll">
           <div id="chart" aria-busy="true"></div>

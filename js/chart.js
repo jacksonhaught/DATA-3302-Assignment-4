@@ -24,6 +24,8 @@ export function renderScatterplot(container, ads, options = {}) {
   };
 
   const { chartHeight, minViewCount, yDomain, margin } = settings;
+  const selectedCompanies = options.selectedCompanies ?? new Set();
+  const hasSelection = selectedCompanies.size > 0;
   const chartWidth = Math.max(760, Math.floor(container.clientWidth || 960));
   const plotWidth = chartWidth - margin.left - margin.right;
 
@@ -49,6 +51,10 @@ export function renderScatterplot(container, ads, options = {}) {
   const scatterData = ads.filter(
     (d) => Number.isFinite(d.viewCount) && d.viewCount >= minViewCount
   );
+
+  // Keep selected companies blue and fade every other company.
+  const isHighlighted = (ad) =>
+    !hasSelection || selectedCompanies.has(ad.brand);
 
   // Create consistent horizontal jitter within each year.
   const random = d3.randomLcg(42);
@@ -85,7 +91,9 @@ export function renderScatterplot(container, ads, options = {}) {
     .append("desc")
     .attr("id", "scatterplot-description")
     .text(
-      "Each blue dot represents one advertisement with at least 500 observed YouTube views."
+      hasSelection
+        ? "Selected companies are blue, while advertisements from other companies are faded."
+        : "Each blue dot represents one advertisement with at least 500 observed YouTube views."
     );
 
   const titleLayer = svg.append("g").attr("class", "title-layer");
@@ -104,7 +112,11 @@ export function renderScatterplot(container, ads, options = {}) {
     .attr("font-weight", "bold")
     .text("Observed YouTube Views for Individual Ads by Super Bowl Year");
 
-  // Explain filtering and dot meaning.
+  // Explain filtering, selection, and dot meaning.
+  const selectionMessage = hasSelection
+    ? "selected companies are blue and all other ads are faded"
+    : "choose companies above to highlight their ads";
+
   titleLayer
     .append("text")
     .attr("x", margin.left)
@@ -112,7 +124,7 @@ export function renderScatterplot(container, ads, options = {}) {
     .attr("font-size", 13)
     .attr("fill", "#4B5563")
     .text(
-      `Only ads with at least ${d3.format(",")(minViewCount)} observed views are shown; each blue dot represents one ad`
+      `Only ads with at least ${d3.format(",")(minViewCount)} observed views are shown; ${selectionMessage}`
     );
 
   // Draw major and minor horizontal log-scale grid lines.
@@ -146,7 +158,9 @@ export function renderScatterplot(container, ads, options = {}) {
     )
     .attr("cy", (d) => y(d.viewCount))
     .attr("r", 3)
-    .attr("fill", "#1D4ED8");
+    .attr("fill", "#1D4ED8")
+    .attr("opacity", (d) => (isHighlighted(d) ? 1 : 0.2))
+    .sort((a, b) => Number(isHighlighted(a)) - Number(isHighlighted(b)));
 
   // Add hover text for each advertisement.
   dots
@@ -183,6 +197,7 @@ export function renderScatterplot(container, ads, options = {}) {
 
   return {
     visibleCount: scatterData.length,
-    totalCount: ads.length
+    totalCount: ads.length,
+    highlightedCount: scatterData.filter(isHighlighted).length
   };
 }
