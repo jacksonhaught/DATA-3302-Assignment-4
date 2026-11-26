@@ -8,13 +8,29 @@ const companyFilterButton = document.querySelector("#company-filter-button");
 const companyFilterLabel = document.querySelector("#company-filter-label");
 const companyFilterMenu = document.querySelector("#company-filter-menu");
 const companyOptions = document.querySelector("#company-options");
+const categoryFilter = document.querySelector("#category-filter");
+const categoryFilterButton = document.querySelector("#category-filter-button");
+const categoryFilterLabel = document.querySelector("#category-filter-label");
+const categoryFilterMenu = document.querySelector("#category-filter-menu");
+const categoryOptions = document.querySelector("#category-options");
+
+const categoryDefinitions = [
+  { value: "funny", label: "Funny" },
+  { value: "show_product_quickly", label: "Show product quickly" },
+  { value: "patriotic", label: "Patriotic" },
+  { value: "celebrity", label: "Celebrity" },
+  { value: "danger", label: "Danger" },
+  { value: "animals", label: "Animals" },
+  { value: "use_sex", label: "Use sex" }
+];
 
 // Keep application data and controls in one state object.
 // Future input controls can update state and call render().
 const state = {
   ads: [],
   minViewCount: 500,
-  selectedCompanies: new Set()
+  selectedCompanies: new Set(),
+  selectedCategories: new Set()
 };
 
 function render() {
@@ -25,84 +41,168 @@ function render() {
     state.ads,
     {
       minViewCount: state.minViewCount,
-      selectedCompanies: state.selectedCompanies
+      selectedCompanies: state.selectedCompanies,
+      selectedCategories: state.selectedCategories
     }
   );
 
+  const hasActiveFilters =
+    state.selectedCompanies.size > 0 || state.selectedCategories.size > 0;
+
   chartStatus.textContent =
-    state.selectedCompanies.size > 0
-      ? `${highlightedCount} of ${visibleCount} displayed advertisements are highlighted.`
+    hasActiveFilters
+      ? `${highlightedCount} of ${visibleCount} displayed advertisements match the selected filters.`
       : `${visibleCount} of ${totalCount} advertisements are displayed.`;
 }
 
-function updateCompanyFilterLabel() {
-  const selectedCount = state.selectedCompanies.size;
+function updateFilterLabel(label, selectedValues, singular, plural) {
+  const selectedCount = selectedValues.size;
 
-  companyFilterLabel.textContent =
+  label.textContent =
     selectedCount === 0
-      ? "Select companies"
-      : `${selectedCount} ${selectedCount === 1 ? "company" : "companies"} selected`;
+      ? `Select ${plural}`
+      : `${selectedCount} ${selectedCount === 1 ? singular : plural} selected`;
+}
+
+function updateSelectedValues(selectedValues, value, isSelected) {
+  if (isSelected) {
+    selectedValues.add(value);
+  } else {
+    selectedValues.delete(value);
+  }
+}
+
+function buildCheckboxOptions(container, options, selectedValues, onChange) {
+  const checkboxes = document.createDocumentFragment();
+
+  options.forEach(({ value, label }) => {
+    const option = document.createElement("label");
+    option.className = "filter-option";
+
+    const checkbox = document.createElement("input");
+    checkbox.type = "checkbox";
+    checkbox.value = value;
+    checkbox.checked = selectedValues.has(value);
+
+    checkbox.addEventListener("change", () => {
+      onChange(value, checkbox.checked);
+    });
+
+    const optionLabel = document.createElement("span");
+    optionLabel.textContent = label;
+
+    option.append(checkbox, optionLabel);
+    checkboxes.append(option);
+  });
+
+  container.replaceChildren(checkboxes);
 }
 
 function buildCompanyOptions() {
   const companies = Array.from(
     new Set(state.ads.map(({ brand }) => brand))
-  ).sort((a, b) => a.localeCompare(b));
+  )
+    .sort((a, b) => a.localeCompare(b))
+    .map((company) => ({ value: company, label: company }));
 
-  const options = document.createDocumentFragment();
-
-  companies.forEach((company) => {
-    const option = document.createElement("label");
-    option.className = "company-option";
-
-    const checkbox = document.createElement("input");
-    checkbox.type = "checkbox";
-    checkbox.value = company;
-    checkbox.checked = state.selectedCompanies.has(company);
-
-    checkbox.addEventListener("change", () => {
-      if (checkbox.checked) {
-        state.selectedCompanies.add(company);
-      } else {
-        state.selectedCompanies.delete(company);
-      }
-
-      updateCompanyFilterLabel();
+  buildCheckboxOptions(
+    companyOptions,
+    companies,
+    state.selectedCompanies,
+    (company, isSelected) => {
+      updateSelectedValues(state.selectedCompanies, company, isSelected);
+      updateFilterLabel(
+        companyFilterLabel,
+        state.selectedCompanies,
+        "company",
+        "companies"
+      );
       render();
-    });
+    }
+  );
 
-    const label = document.createElement("span");
-    label.textContent = company;
-
-    option.append(checkbox, label);
-    options.append(option);
-  });
-
-  companyOptions.replaceChildren(options);
   companyFilterButton.disabled = false;
-  updateCompanyFilterLabel();
+  updateFilterLabel(
+    companyFilterLabel,
+    state.selectedCompanies,
+    "company",
+    "companies"
+  );
 }
 
-function setCompanyMenuOpen(isOpen) {
-  companyFilterButton.setAttribute("aria-expanded", String(isOpen));
-  companyFilterMenu.hidden = !isOpen;
+function buildCategoryOptions() {
+  buildCheckboxOptions(
+    categoryOptions,
+    categoryDefinitions,
+    state.selectedCategories,
+    (category, isSelected) => {
+      updateSelectedValues(state.selectedCategories, category, isSelected);
+      updateFilterLabel(
+        categoryFilterLabel,
+        state.selectedCategories,
+        "category",
+        "categories"
+      );
+      render();
+    }
+  );
+
+  categoryFilterButton.disabled = false;
+  updateFilterLabel(
+    categoryFilterLabel,
+    state.selectedCategories,
+    "category",
+    "categories"
+  );
+}
+
+function setDropdownOpen(button, menu, isOpen) {
+  button.setAttribute("aria-expanded", String(isOpen));
+  menu.hidden = !isOpen;
+}
+
+function toggleDropdown(button, menu, otherButton, otherMenu) {
+  const isOpen = button.getAttribute("aria-expanded") === "true";
+  setDropdownOpen(otherButton, otherMenu, false);
+  setDropdownOpen(button, menu, !isOpen);
 }
 
 companyFilterButton.addEventListener("click", () => {
-  const isOpen = companyFilterButton.getAttribute("aria-expanded") === "true";
-  setCompanyMenuOpen(!isOpen);
+  toggleDropdown(
+    companyFilterButton,
+    companyFilterMenu,
+    categoryFilterButton,
+    categoryFilterMenu
+  );
+});
+
+categoryFilterButton.addEventListener("click", () => {
+  toggleDropdown(
+    categoryFilterButton,
+    categoryFilterMenu,
+    companyFilterButton,
+    companyFilterMenu
+  );
 });
 
 document.addEventListener("click", (event) => {
   if (!companyFilter.contains(event.target)) {
-    setCompanyMenuOpen(false);
+    setDropdownOpen(companyFilterButton, companyFilterMenu, false);
+  }
+
+  if (!categoryFilter.contains(event.target)) {
+    setDropdownOpen(categoryFilterButton, categoryFilterMenu, false);
   }
 });
 
 document.addEventListener("keydown", (event) => {
-  if (event.key === "Escape" && !companyFilterMenu.hidden) {
-    setCompanyMenuOpen(false);
-    companyFilterButton.focus();
+  const companyMenuOpen = !companyFilterMenu.hidden;
+  const categoryMenuOpen = !categoryFilterMenu.hidden;
+
+  if (event.key === "Escape" && (companyMenuOpen || categoryMenuOpen)) {
+    setDropdownOpen(companyFilterButton, companyFilterMenu, false);
+    setDropdownOpen(categoryFilterButton, categoryFilterMenu, false);
+    (companyMenuOpen ? companyFilterButton : categoryFilterButton).focus();
   }
 });
 
@@ -122,6 +222,7 @@ async function initialize() {
     const dataUrl = new URL("../youtube.csv", import.meta.url);
     state.ads = await loadAds(dataUrl);
     buildCompanyOptions();
+    buildCategoryOptions();
     render();
   } catch (error) {
     showError(error);

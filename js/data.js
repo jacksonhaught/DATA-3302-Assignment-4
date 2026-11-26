@@ -7,6 +7,11 @@ export function parseNumber(value) {
   return text === "" || text === "NA" ? NaN : Number(text);
 }
 
+// Convert CSV TRUE and FALSE values into JavaScript booleans.
+function parseBoolean(value) {
+  return String(value ?? "").trim().toLowerCase() === "true";
+}
+
 // Clean the advertisement data before it reaches the chart.
 export function cleanAds(rawAds) {
   // Set remembers full rows that have already appeared.
@@ -25,7 +30,21 @@ export function cleanAds(rawAds) {
       seen.add(key);
       return true;
     })
-    .map(({ year, view_count, brand, id, youtube_url, title }) => {
+    .map(({
+      year,
+      view_count,
+      brand,
+      id,
+      youtube_url,
+      title,
+      funny,
+      show_product_quickly,
+      patriotic,
+      celebrity,
+      danger,
+      animals,
+      use_sex
+    }) => {
       // Standardize the brand name.
       const rawBrand = String(brand ?? "").trim();
 
@@ -40,6 +59,17 @@ export function cleanAds(rawAds) {
 
         // Use the corrected brand name.
         brand: cleanedBrand,
+
+        // Keep each advertisement category for category filtering.
+        categories: {
+          funny: parseBoolean(funny),
+          show_product_quickly: parseBoolean(show_product_quickly),
+          patriotic: parseBoolean(patriotic),
+          celebrity: parseBoolean(celebrity),
+          danger: parseBoolean(danger),
+          animals: parseBoolean(animals),
+          use_sex: parseBoolean(use_sex)
+        },
 
         // Keep identifiers and metadata for future interactive elements.
         id: String(id ?? "").trim(),

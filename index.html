@@ -22,14 +22,21 @@
         </p>
       </header>
 
+      <section class="chart-card" aria-label="YouTube advertisement scatterplot">
+        <div class="chart-scroll">
+          <div id="chart" aria-busy="true"></div>
+        </div>
+        <p id="chart-status" class="visually-hidden" role="status"></p>
+      </section>
+
       <section class="controls" aria-label="Visualization controls">
-        <div class="company-filter" id="company-filter">
+        <div class="filter-control" id="company-filter">
           <p class="control-label" id="company-filter-title">
             Highlight companies
           </p>
           <button
             id="company-filter-button"
-            class="company-filter-button"
+            class="filter-button"
             type="button"
             aria-controls="company-filter-menu"
             aria-expanded="false"
@@ -40,26 +47,50 @@
             <span class="filter-chevron" aria-hidden="true">⌄</span>
           </button>
 
-          <div id="company-filter-menu" class="company-filter-menu" hidden>
+          <div id="company-filter-menu" class="filter-menu" hidden>
             <p class="filter-help">
               Choose one or more companies to highlight their ads. Clear all
               boxes to show every company.
             </p>
             <div
               id="company-options"
-              class="company-options"
+              class="filter-options"
               role="group"
               aria-labelledby="company-filter-title"
             ></div>
           </div>
         </div>
-      </section>
 
-      <section class="chart-card" aria-label="YouTube advertisement scatterplot">
-        <div class="chart-scroll">
-          <div id="chart" aria-busy="true"></div>
+        <div class="filter-control" id="category-filter">
+          <p class="control-label" id="category-filter-title">
+            Highlight categories
+          </p>
+          <button
+            id="category-filter-button"
+            class="filter-button"
+            type="button"
+            aria-controls="category-filter-menu"
+            aria-expanded="false"
+            aria-labelledby="category-filter-title category-filter-label"
+            disabled
+          >
+            <span id="category-filter-label">Select categories</span>
+            <span class="filter-chevron" aria-hidden="true">⌄</span>
+          </button>
+
+          <div id="category-filter-menu" class="filter-menu" hidden>
+            <p class="filter-help">
+              Choose one or more categories to highlight matching ads. Clear
+              all boxes to show every category.
+            </p>
+            <div
+              id="category-options"
+              class="filter-options"
+              role="group"
+              aria-labelledby="category-filter-title"
+            ></div>
+          </div>
         </div>
-        <p id="chart-status" class="visually-hidden" role="status"></p>
       </section>
     </main>
   </body>

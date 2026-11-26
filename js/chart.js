@@ -25,7 +25,10 @@ export function renderScatterplot(container, ads, options = {}) {
 
   const { chartHeight, minViewCount, yDomain, margin } = settings;
   const selectedCompanies = options.selectedCompanies ?? new Set();
-  const hasSelection = selectedCompanies.size > 0;
+  const selectedCategories = options.selectedCategories ?? new Set();
+  const hasCompanySelection = selectedCompanies.size > 0;
+  const hasCategorySelection = selectedCategories.size > 0;
+  const hasActiveFilters = hasCompanySelection || hasCategorySelection;
   const chartWidth = Math.max(760, Math.floor(container.clientWidth || 960));
   const plotWidth = chartWidth - margin.left - margin.right;
 
@@ -52,9 +55,17 @@ export function renderScatterplot(container, ads, options = {}) {
     (d) => Number.isFinite(d.viewCount) && d.viewCount >= minViewCount
   );
 
-  // Keep selected companies blue and fade every other company.
+  // Require every active filter to match.
+  const matchesCompany = (ad) =>
+    !hasCompanySelection || selectedCompanies.has(ad.brand);
+
+  const matchesCategory = (ad) =>
+    !hasCategorySelection ||
+    Array.from(selectedCategories).some((category) => ad.categories?.[category]);
+
+  // Keep matching ads blue and fade every other advertisement.
   const isHighlighted = (ad) =>
-    !hasSelection || selectedCompanies.has(ad.brand);
+    matchesCompany(ad) && matchesCategory(ad);
 
   // Create consistent horizontal jitter within each year.
   const random = d3.randomLcg(42);
@@ -91,8 +102,8 @@ export function renderScatterplot(container, ads, options = {}) {
     .append("desc")
     .attr("id", "scatterplot-description")
     .text(
-      hasSelection
-        ? "Selected companies are blue, while advertisements from other companies are faded."
+      hasActiveFilters
+        ? "Ads matching every active filter are blue, while all other advertisements are faded."
         : "Each blue dot represents one advertisement with at least 500 observed YouTube views."
     );
 
@@ -113,9 +124,9 @@ export function renderScatterplot(container, ads, options = {}) {
     .text("Observed YouTube Views for Individual Ads by Super Bowl Year");
 
   // Explain filtering, selection, and dot meaning.
-  const selectionMessage = hasSelection
-    ? "selected companies are blue and all other ads are faded"
-    : "choose companies above to highlight their ads";
+  const selectionMessage = hasActiveFilters
+    ? "only ads matching every active filter are blue; all other ads are faded"
+    : "choose companies or categories below to highlight their ads";
 
   titleLayer
     .append("text")
