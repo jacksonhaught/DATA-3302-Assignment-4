@@ -13,6 +13,10 @@ const categoryFilterButton = document.querySelector("#category-filter-button");
 const categoryFilterLabel = document.querySelector("#category-filter-label");
 const categoryFilterMenu = document.querySelector("#category-filter-menu");
 const categoryOptions = document.querySelector("#category-options");
+const videoLinkDisplay = document.querySelector("#video-link-display");
+const copyLinkButton = document.querySelector("#copy-link-button");
+const openLinkButton = document.querySelector("#open-link-button");
+const videoLinkStatus = document.querySelector("#video-link-status");
 
 const categoryDefinitions = [
   { value: "funny", label: "Funny" },
@@ -42,7 +46,8 @@ function render() {
     {
       minViewCount: state.minViewCount,
       selectedCompanies: state.selectedCompanies,
-      selectedCategories: state.selectedCategories
+      selectedCategories: state.selectedCategories,
+      onDotClick: displayVideoLink
     }
   );
 
@@ -53,6 +58,56 @@ function render() {
     hasActiveFilters
       ? `${highlightedCount} of ${visibleCount} displayed advertisements match the selected filters.`
       : `${visibleCount} of ${totalCount} advertisements are displayed.`;
+}
+
+function displayVideoLink(ad) {
+  const videoUrl = String(ad.youtubeUrl ?? "").trim();
+  const hasVideoUrl = videoUrl !== "";
+
+  videoLinkDisplay.value = videoUrl;
+  copyLinkButton.disabled = !hasVideoUrl;
+  openLinkButton.disabled = !hasVideoUrl;
+  copyLinkButton.textContent = "Copy link";
+
+  videoLinkStatus.textContent = hasVideoUrl
+    ? `Video link selected for ${ad.brand}.`
+    : `${ad.brand} does not have a video link.`;
+}
+
+let copyButtonTimeout;
+
+async function copyVideoLink() {
+  const videoUrl = videoLinkDisplay.value;
+  if (!videoUrl) return;
+
+  let copied = false;
+
+  try {
+    await navigator.clipboard.writeText(videoUrl);
+    copied = true;
+  } catch {
+    videoLinkDisplay.select();
+    copied = document.execCommand("copy");
+  }
+
+  if (copied) {
+    copyLinkButton.textContent = "Copied";
+    videoLinkStatus.textContent = "Video link copied to the clipboard.";
+
+    window.clearTimeout(copyButtonTimeout);
+    copyButtonTimeout = window.setTimeout(() => {
+      copyLinkButton.textContent = "Copy link";
+    }, 1500);
+  } else {
+    videoLinkStatus.textContent = "The video link could not be copied.";
+  }
+}
+
+function openVideoLink() {
+  const videoUrl = videoLinkDisplay.value;
+  if (!videoUrl) return;
+
+  window.open(videoUrl, "_blank", "noopener,noreferrer");
 }
 
 function updateFilterLabel(label, selectedValues, singular, plural) {
@@ -205,6 +260,9 @@ document.addEventListener("keydown", (event) => {
     (companyMenuOpen ? companyFilterButton : categoryFilterButton).focus();
   }
 });
+
+copyLinkButton.addEventListener("click", copyVideoLink);
+openLinkButton.addEventListener("click", openVideoLink);
 
 function showError(error) {
   const detail = error instanceof Error ? error.message : "Unknown error";

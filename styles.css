@@ -61,7 +61,13 @@ h1 {
   width: min(100%, 320px);
 }
 
+.video-link-control {
+  flex: 1 1 420px;
+  min-width: 320px;
+}
+
 .control-label {
+  display: block;
   margin: 0 0 7px;
   color: #374151;
   font-size: 0.875rem;
@@ -160,6 +166,62 @@ h1 {
   outline-offset: 2px;
 }
 
+.video-link-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.video-link-display {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 10px 12px;
+  color: #111827;
+  font: inherit;
+  background: #ffffff;
+  border: 1px solid #9ca3af;
+  border-radius: 8px;
+}
+
+.video-link-display::placeholder {
+  color: #6b7280;
+}
+
+.video-link-display:focus-visible {
+  outline: 3px solid rgb(37 99 235 / 0.3);
+  outline-offset: 2px;
+}
+
+.link-action-button {
+  flex: 0 0 auto;
+  padding: 10px 12px;
+  color: #ffffff;
+  font: inherit;
+  font-weight: 600;
+  white-space: nowrap;
+  background: #1d4ed8;
+  border: 1px solid #1d4ed8;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.link-action-button:hover:not(:disabled) {
+  background: #1e40af;
+  border-color: #1e40af;
+}
+
+.link-action-button:focus-visible {
+  outline: 3px solid rgb(37 99 235 / 0.3);
+  outline-offset: 2px;
+}
+
+.link-action-button:disabled {
+  color: #6b7280;
+  background: #e5e7eb;
+  border-color: #e5e7eb;
+  cursor: not-allowed;
+}
+
 .chart-card {
   padding: 20px;
   overflow: hidden;
@@ -221,6 +283,19 @@ h1 {
 
   .filter-control {
     width: 100%;
+  }
+
+  .video-link-control {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .video-link-row {
+    flex-wrap: wrap;
+  }
+
+  .video-link-display {
+    flex-basis: 100%;
   }
 
   .chart-card {

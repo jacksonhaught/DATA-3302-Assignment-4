@@ -91,6 +91,38 @@
             ></div>
           </div>
         </div>
+
+        <div class="video-link-control">
+          <label class="control-label" for="video-link-display">
+            Advertisement video link
+          </label>
+          <div class="video-link-row">
+            <input
+              id="video-link-display"
+              class="video-link-display"
+              type="text"
+              placeholder="Click a dot to display its video link"
+              readonly
+            />
+            <button
+              id="copy-link-button"
+              class="link-action-button"
+              type="button"
+              disabled
+            >
+              Copy link
+            </button>
+            <button
+              id="open-link-button"
+              class="link-action-button"
+              type="button"
+              disabled
+            >
+              Open link
+            </button>
+          </div>
+          <p id="video-link-status" class="visually-hidden" role="status"></p>
+        </div>
       </section>
     </main>
   </body>

@@ -26,6 +26,7 @@ export function renderScatterplot(container, ads, options = {}) {
   const { chartHeight, minViewCount, yDomain, margin } = settings;
   const selectedCompanies = options.selectedCompanies ?? new Set();
   const selectedCategories = options.selectedCategories ?? new Set();
+  const onDotClick = options.onDotClick ?? (() => {});
   const hasCompanySelection = selectedCompanies.size > 0;
   const hasCategorySelection = selectedCategories.size > 0;
   const hasActiveFilters = hasCompanySelection || hasCategorySelection;
@@ -91,12 +92,8 @@ export function renderScatterplot(container, ads, options = {}) {
     .attr("height", chartHeight)
     .attr("viewBox", `0 0 ${chartWidth} ${chartHeight}`)
     .attr("role", "img")
-    .attr("aria-labelledby", "scatterplot-title scatterplot-description");
-
-  svg
-    .append("title")
-    .attr("id", "scatterplot-title")
-    .text("Observed YouTube Views for Individual Ads by Super Bowl Year");
+    .attr("aria-label", "Observed YouTube Views for Individual Ads by Super Bowl Year")
+    .attr("aria-describedby", "scatterplot-description");
 
   svg
     .append("desc")
@@ -171,6 +168,7 @@ export function renderScatterplot(container, ads, options = {}) {
     .attr("r", 3)
     .attr("fill", "#1D4ED8")
     .attr("opacity", (d) => (isHighlighted(d) ? 1 : 0.2))
+    .attr("cursor", "pointer")
     .sort((a, b) => Number(isHighlighted(a)) - Number(isHighlighted(b)));
 
   // Add hover text for each advertisement.
@@ -182,6 +180,9 @@ export function renderScatterplot(container, ads, options = {}) {
           ",.0f"
         )(d.viewCount)} observed YouTube views`
     );
+
+  // Display the selected advertisement's video link after a dot is clicked.
+  dots.on("click", (_, d) => onDotClick(d));
 
   // Draw horizontal year labels.
   xAxisLayer
