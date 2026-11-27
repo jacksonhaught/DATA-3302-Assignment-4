@@ -13,6 +13,7 @@ const categoryFilterButton = document.querySelector("#category-filter-button");
 const categoryFilterLabel = document.querySelector("#category-filter-label");
 const categoryFilterMenu = document.querySelector("#category-filter-menu");
 const categoryOptions = document.querySelector("#category-options");
+const videoLinkLabel = document.querySelector("#video-link-label");
 const videoLinkDisplay = document.querySelector("#video-link-display");
 const copyLinkButton = document.querySelector("#copy-link-button");
 const openLinkButton = document.querySelector("#open-link-button");
@@ -62,8 +63,10 @@ function render() {
 
 function displayVideoLink(ad) {
   const videoUrl = String(ad.youtubeUrl ?? "").trim();
+  const videoTitle = String(ad.title ?? "").trim() || ad.brand;
   const hasVideoUrl = videoUrl !== "";
 
+  videoLinkLabel.textContent = `Video link: ${videoTitle}`;
   videoLinkDisplay.value = videoUrl;
   copyLinkButton.disabled = !hasVideoUrl;
   openLinkButton.disabled = !hasVideoUrl;
