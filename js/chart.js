@@ -83,7 +83,7 @@ export function renderScatterplot(container, ads, options = {}) {
   // Keep a reference list of major log-scale grid values.
   const majorLogTicks = d3.range(10).map((power) => 10 ** power);
   const baseDotRadius = 3;
-  const minimumDotRadius = 2.5;
+  const minimumDotRadius = 2.75;
 
   // Replace the previous chart before drawing the updated version.
   container.replaceChildren();
