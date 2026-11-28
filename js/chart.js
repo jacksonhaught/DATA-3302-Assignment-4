@@ -82,6 +82,8 @@ export function renderScatterplot(container, ads, options = {}) {
 
   // Keep a reference list of major log-scale grid values.
   const majorLogTicks = d3.range(10).map((power) => 10 ** power);
+  const baseDotRadius = 3;
+  const minimumDotRadius = 1.5;
 
   // Replace the previous chart before drawing the updated version.
   container.replaceChildren();
@@ -206,8 +208,13 @@ export function renderScatterplot(container, ads, options = {}) {
     const [minimumViewCount, maximumViewCount] = zoomedY
       .domain()
       .sort(d3.ascending);
+
+    // Include ticks on the scale boundaries despite floating-point rounding.
+    const boundaryTolerance = 1e-9;
     const visibleMajorTicks = majorLogTicks.filter(
-      (tick) => tick >= minimumViewCount && tick <= maximumViewCount
+      (tick) =>
+        tick >= minimumViewCount / (1 + boundaryTolerance) &&
+        tick <= maximumViewCount * (1 + boundaryTolerance)
     );
     const yAxisTicks =
       visibleMajorTicks.length >= 2 ? visibleMajorTicks : zoomedY.ticks(5);
@@ -253,13 +260,19 @@ export function renderScatterplot(container, ads, options = {}) {
           .tickFormat(d3.format(","))
       );
 
-    // Increase dot size proportionally as the chart is zoomed in.
+    // Shrink dots as the chart is zoomed in to keep nearby ads separate.
     dots
       .attr("cx", (d) =>
         transform.applyX(x(d.year) + jitterOffsets.get(d))
       )
       .attr("cy", (d) => transform.applyY(y(d.viewCount)))
-      .attr("r", 3 * transform.k);
+      .attr(
+        "r",
+        Math.max(
+          minimumDotRadius,
+          baseDotRadius / Math.sqrt(transform.k)
+        )
+      );
   }
 
   // Let users scroll or pinch to zoom and drag to pan around the plot.
@@ -287,3 +300,8 @@ export function renderScatterplot(container, ads, options = {}) {
     highlightedCount: scatterData.filter(isHighlighted).length
   };
 }
+
+
+
+
+
