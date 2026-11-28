@@ -12,6 +12,39 @@ const defaultOptions = {
   }
 };
 
+function appendWrappedText(
+  layer,
+  { x, y, width, text, fontSize, lineHeight, fill }
+) {
+  const textElement = layer
+    .append("text")
+    .attr("x", x)
+    .attr("y", y)
+    .attr("font-size", fontSize)
+    .attr("fill", fill);
+  const words = text.split(/\s+/);
+  let line = [];
+  let lineCount = 1;
+  let tspan = textElement.append("tspan").attr("x", x).attr("y", y);
+
+  words.forEach((word) => {
+    line.push(word);
+    tspan.text(line.join(" "));
+
+    if (tspan.node().getComputedTextLength() > width && line.length > 1) {
+      line.pop();
+      tspan.text(line.join(" "));
+      line = [word];
+      lineCount += 1;
+      tspan = textElement
+        .append("tspan")
+        .attr("x", x)
+        .attr("y", y + (lineCount - 1) * lineHeight)
+        .text(word);
+    }
+  });
+}
+
 // Draw the YouTube-view scatterplot inside the supplied container.
 export function renderScatterplot(container, ads, options = {}) {
   const settings = {
@@ -151,23 +184,15 @@ export function renderScatterplot(container, ads, options = {}) {
     ? "only ads matching every active filter are blue; all other ads are faded"
     : "choose companies or categories below to highlight their ads";
 
-  titleLayer
-    .append("text")
-    .attr("x", margin.left)
-    .attr("y", 48)
-    .attr("font-size", 13)
-    .attr("fill", "#4B5563")
-    .text(
-      `Only ads with at least ${d3.format(",")(minViewCount)} observed views are shown; ${selectionMessage}`
-    );
-
-  titleLayer
-    .append("text")
-    .attr("x", margin.left)
-    .attr("y", 68)
-    .attr("font-size", 12)
-    .attr("fill", "#4B5563")
-    .text("Scroll or pinch to zoom. Drag to pan.");
+  appendWrappedText(titleLayer, {
+    x: margin.left,
+    y: 48,
+    width: chartWidth - margin.left - margin.right,
+    text: `Only ads with at least ${d3.format(",")(minViewCount)} observed views are shown; ${selectionMessage}. Scroll or pinch to zoom. Drag to pan.`,
+    fontSize: 13,
+    lineHeight: 18,
+    fill: "#4B5563"
+  });
 
   // Draw one jittered blue dot for every remaining advertisement.
   const dots = dotsLayer
@@ -293,7 +318,6 @@ export function renderScatterplot(container, ads, options = {}) {
     highlightedCount: scatterData.filter(isHighlighted).length
   };
 }
-
 
 
 

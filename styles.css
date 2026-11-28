@@ -16,21 +16,11 @@ body {
 .page {
   width: min(1200px, 100%);
   margin: 0 auto;
-  padding: 48px 24px;
+  padding: 40px 24px 48px;
 }
 
 .page-header {
-  max-width: 760px;
-  margin-bottom: 28px;
-}
-
-.eyebrow {
-  margin: 0 0 8px;
-  color: #1d4ed8;
-  font-size: 0.8rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  margin-bottom: 24px;
 }
 
 h1 {
@@ -302,3 +292,5 @@ h1 {
     padding: 12px;
   }
 }
+
+
