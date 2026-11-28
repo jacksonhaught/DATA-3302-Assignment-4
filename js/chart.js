@@ -82,8 +82,7 @@ export function renderScatterplot(container, ads, options = {}) {
 
   // Keep a reference list of major log-scale grid values.
   const majorLogTicks = d3.range(10).map((power) => 10 ** power);
-  const baseDotRadius = 3;
-  const minimumDotRadius = 2.75;
+  const dotRadius = 4;
 
   // Replace the previous chart before drawing the updated version.
   container.replaceChildren();
@@ -260,19 +259,13 @@ export function renderScatterplot(container, ads, options = {}) {
           .tickFormat(d3.format(","))
       );
 
-    // Shrink dots as the chart is zoomed in to keep nearby ads separate.
+    // Keep dots visible while zooming spreads nearby ads farther apart.
     dots
       .attr("cx", (d) =>
         transform.applyX(x(d.year) + jitterOffsets.get(d))
       )
       .attr("cy", (d) => transform.applyY(y(d.viewCount)))
-      .attr(
-        "r",
-        Math.max(
-          minimumDotRadius,
-          baseDotRadius / Math.sqrt(transform.k)
-        )
-      );
+      .attr("r", dotRadius);
   }
 
   // Let users scroll or pinch to zoom and drag to pan around the plot.
@@ -300,6 +293,12 @@ export function renderScatterplot(container, ads, options = {}) {
     highlightedCount: scatterData.filter(isHighlighted).length
   };
 }
+
+
+
+
+
+
 
 
 
