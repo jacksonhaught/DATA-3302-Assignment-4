@@ -38,12 +38,12 @@ export function renderScatterplot(container, ads, options = {}) {
     d3.ascending
   );
 
-  // Place years across x axis.
+  // Use a continuous year scale so both axes can be rescaled during zooming.
+  const [firstYear, lastYear] = d3.extent(yearLevels);
   const x = d3
-    .scaleBand()
-    .domain(yearLevels)
-    .range([margin.left, chartWidth - margin.right])
-    .padding(0.25);
+    .scaleLinear()
+    .domain([firstYear - 0.5, lastYear + 0.5])
+    .range([margin.left, chartWidth - margin.right]);
 
   // Keep y axis on the same log scale as visualization 2.
   const y = d3
@@ -62,7 +62,9 @@ export function renderScatterplot(container, ads, options = {}) {
 
   const matchesCategory = (ad) =>
     !hasCategorySelection ||
-    Array.from(selectedCategories).some((category) => ad.categories?.[category]);
+    Array.from(selectedCategories).some(
+      (category) => ad.categories?.[category]
+    );
 
   // Keep matching ads blue and fade every other advertisement.
   const isHighlighted = (ad) =>
@@ -70,16 +72,16 @@ export function renderScatterplot(container, ads, options = {}) {
 
   // Create consistent horizontal jitter within each year.
   const random = d3.randomLcg(42);
+  const yearSpacing = Math.abs(x(firstYear + 1) - x(firstYear));
   const jitterOffsets = new Map(
     scatterData.map((d) => [
       d,
-      (random() - 0.5) * x.bandwidth() * 0.65
+      (random() - 0.5) * yearSpacing * 0.65
     ])
   );
 
-  // Create major and minor log-scale grid values.
+  // Keep a reference list of major log-scale grid values.
   const majorLogTicks = d3.range(10).map((power) => 10 ** power);
-  const allLogTicks = y.ticks(100);
 
   // Replace the previous chart before drawing the updated version.
   container.replaceChildren();
@@ -92,21 +94,44 @@ export function renderScatterplot(container, ads, options = {}) {
     .attr("height", chartHeight)
     .attr("viewBox", `0 0 ${chartWidth} ${chartHeight}`)
     .attr("role", "img")
-    .attr("aria-label", "Observed YouTube Views for Individual Ads by Super Bowl Year")
-    .attr("aria-describedby", "scatterplot-description");
+    .attr(
+      "aria-label",
+      "Zoomable scatterplot of observed YouTube views for individual advertisements by Super Bowl year"
+    )
+    .attr("aria-describedby", "scatterplot-description")
+    .style("touch-action", "none");
 
   svg
     .append("desc")
     .attr("id", "scatterplot-description")
     .text(
       hasActiveFilters
-        ? "Ads matching every active filter are blue, while all other advertisements are faded."
-        : "Each blue dot represents one advertisement with at least 500 observed YouTube views."
+        ? "Scroll or pinch to zoom, and drag to pan. Ads matching every active filter are blue, while all other advertisements are faded."
+        : "Scroll or pinch to zoom, and drag to pan. Each blue dot represents one advertisement with at least 500 observed YouTube views."
     );
+
+  const clipId = "scatterplot-clip";
+  const plotBounds = [
+    [margin.left, margin.top],
+    [chartWidth - margin.right, chartHeight - margin.bottom]
+  ];
+
+  svg
+    .append("defs")
+    .append("clipPath")
+    .attr("id", clipId)
+    .append("rect")
+    .attr("x", margin.left)
+    .attr("y", margin.top)
+    .attr("width", plotWidth)
+    .attr("height", chartHeight - margin.top - margin.bottom);
 
   const titleLayer = svg.append("g").attr("class", "title-layer");
   const gridLayer = svg.append("g").attr("class", "grid-layer");
-  const dotsLayer = svg.append("g").attr("class", "dots-layer");
+  const dotsLayer = svg
+    .append("g")
+    .attr("class", "dots-layer")
+    .attr("clip-path", `url(#${clipId})`);
   const xAxisLayer = svg.append("g").attr("class", "x-axis");
   const yAxisLayer = svg.append("g").attr("class", "y-axis");
   const axisLabelLayer = svg.append("g").attr("class", "axis-label-layer");
@@ -135,37 +160,19 @@ export function renderScatterplot(container, ads, options = {}) {
       `Only ads with at least ${d3.format(",")(minViewCount)} observed views are shown; ${selectionMessage}`
     );
 
-  // Draw major and minor horizontal log-scale grid lines.
-  const grid = gridLayer
-    .attr("transform", `translate(${margin.left}, 0)`)
-    .call(
-      d3
-        .axisLeft(y)
-        .tickValues(allLogTicks)
-        .tickSize(-plotWidth)
-        .tickFormat("")
-    );
-
-  grid.select(".domain").remove();
-
-  grid
-    .selectAll(".tick line")
-    .attr("stroke", (d) =>
-      majorLogTicks.includes(d) ? "#E5E7EB" : "#F3F4F6"
-    )
-    .attr("stroke-width", 1);
+  titleLayer
+    .append("text")
+    .attr("x", margin.left)
+    .attr("y", 68)
+    .attr("font-size", 12)
+    .attr("fill", "#4B5563")
+    .text("Scroll or pinch to zoom. Drag to pan.");
 
   // Draw one jittered blue dot for every remaining advertisement.
   const dots = dotsLayer
     .selectAll("circle")
     .data(scatterData, (d) => d.id)
     .join("circle")
-    .attr(
-      "cx",
-      (d) => x(d.year) + x.bandwidth() / 2 + jitterOffsets.get(d)
-    )
-    .attr("cy", (d) => y(d.viewCount))
-    .attr("r", 3)
     .attr("fill", "#1D4ED8")
     .attr("opacity", (d) => (isHighlighted(d) ? 1 : 0.2))
     .attr("cursor", "pointer")
@@ -184,20 +191,87 @@ export function renderScatterplot(container, ads, options = {}) {
   // Display the selected advertisement's video link after a dot is clicked.
   dots.on("click", (_, d) => onDotClick(d));
 
-  // Draw horizontal year labels.
-  xAxisLayer
-    .attr("transform", `translate(0, ${chartHeight - margin.bottom})`)
-    .call(d3.axisBottom(x).tickSizeOuter(0));
-
-  // Draw major y-axis labels.
-  yAxisLayer
-    .attr("transform", `translate(${margin.left}, 0)`)
-    .call(
-      d3
-        .axisLeft(y)
-        .tickValues(majorLogTicks)
-        .tickFormat(d3.format(","))
+  // Redraw the axes, grid, and dots whenever the zoom transform changes.
+  function updateZoom(transform) {
+    const zoomedX = transform.rescaleX(x);
+    const zoomedY = transform.rescaleY(y);
+    const [firstVisibleYear, lastVisibleYear] = zoomedX
+      .domain()
+      .sort(d3.ascending);
+    const visibleYears = yearLevels.filter(
+      (year) =>
+        year >= Math.ceil(firstVisibleYear) &&
+        year <= Math.floor(lastVisibleYear)
     );
+    const [minimumViewCount, maximumViewCount] = zoomedY
+      .domain()
+      .sort(d3.ascending);
+    const visibleMajorTicks = majorLogTicks.filter(
+      (tick) => tick >= minimumViewCount && tick <= maximumViewCount
+    );
+    const yAxisTicks =
+      visibleMajorTicks.length >= 2 ? visibleMajorTicks : zoomedY.ticks(5);
+
+    // Draw major and minor horizontal log-scale grid lines.
+    const grid = gridLayer
+      .attr("transform", `translate(${margin.left}, 0)`)
+      .call(
+        d3
+          .axisLeft(zoomedY)
+          .tickValues(zoomedY.ticks(100))
+          .tickSize(-plotWidth)
+          .tickFormat("")
+      );
+
+    grid.select(".domain").remove();
+
+    grid
+      .selectAll(".tick line")
+      .attr("stroke", (d) =>
+        majorLogTicks.includes(d) ? "#E5E7EB" : "#F3F4F6"
+      )
+      .attr("stroke-width", 1);
+
+    // Draw horizontal year labels for the current zoom level.
+    xAxisLayer
+      .attr("transform", `translate(0, ${chartHeight - margin.bottom})`)
+      .call(
+        d3
+          .axisBottom(zoomedX)
+          .tickValues(visibleYears)
+          .tickFormat(d3.format("d"))
+          .tickSizeOuter(0)
+      );
+
+    // Draw y-axis labels for the current log-scale range.
+    yAxisLayer
+      .attr("transform", `translate(${margin.left}, 0)`)
+      .call(
+        d3
+          .axisLeft(zoomedY)
+          .tickValues(yAxisTicks)
+          .tickFormat(d3.format(","))
+      );
+
+    // Increase dot size proportionally as the chart is zoomed in.
+    dots
+      .attr("cx", (d) =>
+        transform.applyX(x(d.year) + jitterOffsets.get(d))
+      )
+      .attr("cy", (d) => transform.applyY(y(d.viewCount)))
+      .attr("r", 3 * transform.k);
+  }
+
+  // Let users scroll or pinch to zoom and drag to pan around the plot.
+  const zoom = d3
+    .zoom()
+    .scaleExtent([1, 5])
+    .extent(plotBounds)
+    .translateExtent(plotBounds)
+    .on("zoom", (event) => updateZoom(event.transform));
+
+  svg.call(zoom);
+  updateZoom(d3.zoomIdentity);
 
   // Add vertical y-axis label.
   axisLabelLayer
